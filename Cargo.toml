@@ -1,7 +1,21 @@
 [package]
-name = "kademlia"
+name = "kademlia-dht"
 version = "0.1.0"
 authors = ["Jeffrey Xiao <jeffrey.xiao1998@gmail.com>"]
+license =  "MIT"
+readme = "README.md"
+repository = "https://github.com/jeffrey-xiao/kademlia-dht-rs"
+documentation = "https://docs.rs/kademlia-dht"
+description = """
+A simple implementation of the Kademlia DHT.
+"""
+categories = ["algorithms", "concurrency", "data-structures"]
+keywords = ["kademlia", "dht"]
+include = ["src/**/*", "Cargo.toml"]
+
+[badges]
+travis-ci = { repository = "jeffrey-xiao/kademlia-dht-rs", branch = "master" }
+codecov = { repository = "jeffrey-xiao/kademlia-dht-rs", service = "github" }
 
 [dependencies]
 bincode = "0.9"

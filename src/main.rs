@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate log;
-extern crate kademlia;
+extern crate kademlia_dht;
 extern crate simplelog;
 extern crate sha3;
 
@@ -9,9 +9,9 @@ use std::io;
 use std::collections::HashMap;
 use sha3::{Digest, Sha3_256};
 
-use kademlia::Node;
-use kademlia::key::Key;
-use kademlia::protocol::Message;
+use kademlia_dht::Node;
+use kademlia_dht::key::Key;
+use kademlia_dht::protocol::Message;
 
 use std::convert::AsMut;
 
