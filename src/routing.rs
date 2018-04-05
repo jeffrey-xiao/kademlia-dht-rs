@@ -177,6 +177,3 @@ impl RoutingTable {
         self.buckets.len()
     }
 }
-
-#[cfg(test)]
-mod tests {}
