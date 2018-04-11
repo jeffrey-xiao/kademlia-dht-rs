@@ -7,6 +7,10 @@ use {BUCKET_REFRESH_INTERVAL, REPLICATION_PARAM, ROUTING_TABLE_SIZE};
 use node::node_data::NodeData;
 use key::Key;
 
+/// A k-bucket in a node's routing table that has a maximum capacity of `REPLICATION_PARAM`.
+///
+/// The nodes in the k-bucket are sorted by the time of the most recent communication with those
+/// which have been most recently communicated at the end of the list.
 #[derive(Clone, Debug)]
 struct RoutingBucket {
     nodes: Vec<NodeData>,
@@ -14,6 +18,7 @@ struct RoutingBucket {
 }
 
 impl RoutingBucket {
+    /// Constructs a new, empty `RoutingBucket`.
     fn new() -> Self {
         RoutingBucket {
             nodes: Vec::new(),
@@ -21,6 +26,10 @@ impl RoutingBucket {
         }
     }
 
+    /// Upserts a node in the routing bucket. If the node already exists in the routing bucket, the
+    /// node will be moved to the end of the list. If the routing bucket is at capacity, it will
+    /// remove the node least recently communicated with to create room for the new node.
+    /// Additionally, `last_update_time` is also updated.
     fn update_node(&mut self, node_data: NodeData) {
         self.last_update_time = SteadyTime::now();
         if let Some(index) = self.nodes.iter().position(|data| *data == node_data) {
@@ -32,10 +41,12 @@ impl RoutingBucket {
         }
     }
 
+    /// Returns `true` if the `node_data` exists in the routing bucket.
     fn contains(&self, node_data: &NodeData) -> bool {
         self.nodes.iter().any(|data| data == node_data)
     }
 
+    /// Splits `self` by a particular index and returns the closer bucket.
     fn split(&mut self, key: &Key, index: usize) -> RoutingBucket {
         let (old_bucket, new_bucket) = self.nodes
             .drain(..)
@@ -47,10 +58,12 @@ impl RoutingBucket {
         }
     }
 
+    /// Returns a slice of the nodes contained by the routing bucket.
     fn get_nodes(&self) -> &[NodeData] {
         self.nodes.as_slice()
     }
 
+    /// Removes the least recently seen node from the routing bucket.
     fn remove_lrs(&mut self) -> Option<NodeData> {
         if self.size() == 0 {
             None
@@ -59,6 +72,7 @@ impl RoutingBucket {
         }
     }
 
+    /// Removes `node_data` from the routing bucket.
     pub fn remove_node(&mut self, node_data: &NodeData) -> Option<NodeData> {
         if let Some(index) = self.nodes.iter().position(|data| data == node_data) {
             Some(self.nodes.remove(index))
@@ -67,16 +81,23 @@ impl RoutingBucket {
         }
     }
 
+    /// Returns `true` if the routing bucket has not been recently updated.
+    ///
+    /// A bucket is stale if it has not been updated in `BUCKET_REFRESH_INTERVAL` seconds.
     pub fn is_stale(&self) -> bool {
         SteadyTime::now() - self.last_update_time > Duration::seconds(BUCKET_REFRESH_INTERVAL as i64)
     }
 
+    /// Returns the number of nodes in the routing bucket.
     pub fn size(&self) -> usize {
         self.nodes.len()
     }
 }
 
-// An implementation of the routing table tree using a vector of buckets
+/// A node's routing table tree.
+///
+/// `RoutingTable` is implemented using a growable vector of `RoutingBucket`. The relaxation of
+/// k-bucket splitting proposed in Section 4.2 is not implemented.
 #[derive(Clone, Debug)]
 pub struct RoutingTable {
     buckets: Vec<RoutingBucket>,
@@ -84,6 +105,7 @@ pub struct RoutingTable {
 }
 
 impl RoutingTable {
+    /// Constructs a new, empty `RoutingTable`.
     pub fn new(node_data: Arc<NodeData>) -> Self {
         let mut buckets = Vec::new();
         buckets.push(RoutingBucket::new());
@@ -93,6 +115,8 @@ impl RoutingTable {
         }
     }
 
+    /// Upserts a node into the routing table. It will continue to split the routing table until the
+    /// routing table is full or until the node can be upserted.
     pub fn update_node(&mut self, node_data: NodeData) -> bool {
         let distance = self.node_data.id.xor(&node_data.id).leading_zeros();
         let mut target_bucket = cmp::min(distance, self.buckets.len() - 1);
@@ -122,6 +146,7 @@ impl RoutingTable {
         }
     }
 
+    /// Returns the closest `count` nodes to `key`.
     pub fn get_closest_nodes(&self, key: &Key, count: usize) -> Vec<NodeData> {
         let index = cmp::min(self.node_data.id.xor(key).leading_zeros(), self.buckets.len() - 1);
         let mut ret = Vec::new();
@@ -153,16 +178,19 @@ impl RoutingTable {
         ret
     }
 
+    /// Removes the least recently seen node from a particular routing bucket in the routing table.
     pub fn remove_lrs(&mut self, key: &Key) -> Option<NodeData> {
         let index = cmp::min(self.node_data.id.xor(key).leading_zeros(), self.buckets.len() - 1);
         self.buckets[index].remove_lrs()
     }
 
+    /// Removes `node_data` from the routing table.
     pub fn remove_node(&mut self, node_data: &NodeData) {
         let index = cmp::min(self.node_data.id.xor(&node_data.id).leading_zeros(), self.buckets.len() - 1);
         self.buckets[index].remove_node(node_data);
     }
 
+    /// Returns a list of all the stale routing buckets in the routing table.
     pub fn get_stale_indexes(&self)-> Vec<usize> {
         let mut ret = Vec::new();
         for (i, bucket) in self.buckets.iter().enumerate() {
@@ -173,6 +201,7 @@ impl RoutingTable {
         ret
     }
 
+    /// Returns the number of routing buckets in the routing table.
     pub fn size(&self) -> usize {
         self.buckets.len()
     }

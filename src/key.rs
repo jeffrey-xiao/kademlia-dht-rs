@@ -3,6 +3,10 @@ use std::fmt::{Debug, Formatter, Result};
 
 use KEY_LENGTH;
 
+/// A key that represents nodes and data.
+///
+/// The keys in this implementation of Kademlia have 256 bits as opposed to 160 bits so that SHA-3
+/// can be used instead of SHA-1.
 #[derive(Ord, PartialOrd, PartialEq, Eq, Clone, Hash, Serialize, Deserialize, Default, Copy)]
 pub struct Key(pub [u8; KEY_LENGTH]);
 
@@ -14,11 +18,13 @@ impl Debug for Key {
 }
 
 impl Key {
+    /// Constructs a new `Key` from a byte array.
     pub fn new(data: [u8; KEY_LENGTH]) -> Self {
         Key(data)
     }
 
-    pub fn rand() -> Self {
+    /// Constructs a new, random `Key`.
+    pub(in super) fn rand() -> Self {
         let mut ret = Key([0; KEY_LENGTH]);
         for byte in &mut ret.0 {
             *byte = rand::random::<u8>();
@@ -26,8 +32,8 @@ impl Key {
         ret
     }
 
-    // generates a random key from [2^(KEY_LENGTH - index - 1), 2^(KEY_LENGTH - index))
-    pub fn rand_in_range(index: usize) -> Self {
+    /// Constructs a new, random `Key` from `[2^(KEY_LENGTH - index - 1), 2^(KEY_LENGTH - index))`.
+    pub(in super) fn rand_in_range(index: usize) -> Self {
         let mut ret = Key::rand();
         let bytes = index / 8;
         let bit = index % 8;
@@ -39,7 +45,8 @@ impl Key {
         ret
     }
 
-    pub fn xor(&self, key: &Key) -> Key {
+    /// Returns the XOR result between `self` and `key`.
+    pub(in super) fn xor(&self, key: &Key) -> Key {
         let mut ret = [0; KEY_LENGTH];
         for (i, byte) in ret.iter_mut().enumerate() {
             *byte = self.0[i] ^ key.0[i];
@@ -47,7 +54,9 @@ impl Key {
         Key(ret)
     }
 
-    pub fn leading_zeros(&self) -> usize {
+    /// Returns the number of leading zeros in `self`. This is used to calculate the distance
+    /// between keys.
+    pub(in super) fn leading_zeros(&self) -> usize {
         let mut ret = 0;
         for i in 0..KEY_LENGTH {
             if self.0[i] == 0 {

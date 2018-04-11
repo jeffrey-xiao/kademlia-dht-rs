@@ -9,6 +9,10 @@ use MESSAGE_LENGTH;
 use node::node_data::NodeData;
 use key::Key;
 
+/// An enum representing a request RPC.
+///
+/// Each request RPC also carries a randomly generated key. The response to the RPC must contain
+/// the same randomly generated key or else it will be ignored.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Request {
     pub id: Key,
@@ -16,6 +20,10 @@ pub struct Request {
     pub payload: RequestPayload,
 }
 
+/// An enum representing the payload to a request RPC.
+///
+/// As stated in the Kademlia paper, the four possible RPCs are `PING`, `STORE`, `FIND_NODE`, and
+/// `FIND_VALUE`.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum RequestPayload {
     Ping,
@@ -24,6 +32,7 @@ pub enum RequestPayload {
     FindValue(Key),
 }
 
+/// An enum representing the response to a request RPC.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Response {
     pub request: Request,
@@ -31,6 +40,10 @@ pub struct Response {
     pub payload: ResponsePayload,
 }
 
+/// An enum representing the payload to a response RPC.
+///
+/// As stated in the Kademlia paper, a response to a request could be a list of nodes, a value, or
+/// a pong.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ResponsePayload {
     Nodes(Vec<NodeData>),
@@ -38,6 +51,7 @@ pub enum ResponsePayload {
     Pong,
 }
 
+/// An enum that represents a message that is sent between nodes.
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Message {
     Request(Request),
@@ -45,6 +59,8 @@ pub enum Message {
     Kill,
 }
 
+/// `Protocol` facilitates the underlying communication between nodes by sending messages to other
+/// nodes, and by passing messages from other nodes to the current node.
 #[derive(Clone)]
 pub struct Protocol {
     socket: Arc<UdpSocket>,

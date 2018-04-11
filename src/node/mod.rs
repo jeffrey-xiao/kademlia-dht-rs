@@ -16,6 +16,7 @@ use protocol::{Message, Protocol, Request, RequestPayload, Response, ResponsePay
 use key::Key;
 use storage::Storage;
 
+/// A node in the Kademlia DHT.
 #[derive(Clone)]
 pub struct Node {
     pub node_data: Arc<NodeData>,
@@ -27,6 +28,8 @@ pub struct Node {
 }
 
 impl Node {
+    /// Constructs a new `Node` on a specific ip and port, and bootstraps the node with an existing
+    /// node if `bootstrap` is not `None`.
     pub fn new(ip: &str, port: &str, bootstrap: Option<NodeData>) -> Self {
         let socket = UdpSocket::bind(format!("{}:{}", ip, port))
             .expect("Error: Could not bind to address!");
@@ -58,6 +61,7 @@ impl Node {
         ret
     }
 
+    /// Starts a thread that listens to responses.
     fn start_message_handler(&self, rx: Receiver<Message>) {
         let mut node = self.clone();
         thread::spawn(move || {
@@ -75,6 +79,7 @@ impl Node {
         });
     }
 
+    /// Starts a thread that refreshes stale routing buckets.
     fn start_bucket_refresher(&self) {
         let mut node = self.clone();
         thread::spawn(move || {
@@ -97,6 +102,9 @@ impl Node {
         });
     }
 
+    /// Bootstraps the routing table using an existing node. The node first looks up its id to
+    /// identify the closest nodes to it. Then it refreshes all routing buckets by looking up a
+    /// random key in the buckets' range.
     fn bootstrap_routing_table(&mut self) {
         let target_key = self.node_data.id;
         self.lookup_nodes(&target_key, true);
@@ -108,6 +116,9 @@ impl Node {
         }
     }
 
+    /// Upserts the routing table. If the node cannot be inserted into the routing table, it
+    /// removes and pings the least recently seen node. If the least recently seen node responds,
+    /// it will be readded into the routing table, and the current node will be ignored.
     fn update_routing_table(&mut self, node_data: NodeData) {
         debug!("{} updating {}", self.node_data.addr, node_data.addr);
         let mut node = self.clone();
@@ -136,6 +147,7 @@ impl Node {
         });
     }
 
+    /// Handles a request RPC.
     fn handle_request(&mut self, request: &Request) {
         info!(
             "{} - Receiving request from {} {:#?}",
@@ -175,6 +187,8 @@ impl Node {
         )
     }
 
+    /// Handles a response RPC. If the id in the response does not match any outgoing request, then
+    /// the response will be ignored.
     fn handle_response(&mut self, response: &Response) {
         self.clone().update_routing_table(response.receiver.clone());
         let pending_requests = self.pending_requests.lock().unwrap();
@@ -192,6 +206,7 @@ impl Node {
         }
     }
 
+    /// Sends a request RPC.
     fn send_request(&mut self, dest: &NodeData, payload: RequestPayload) -> Option<Response> {
         info!("{} - Sending request to {} {:#?}", self.node_data.addr, dest.addr, payload);
         let (response_tx, response_rx) = channel();
@@ -230,22 +245,27 @@ impl Node {
         }
     }
 
+    /// Sends a `PING` RPC.
     fn rpc_ping(&mut self, dest: &NodeData) -> Option<Response> {
         self.send_request(dest, RequestPayload::Ping)
     }
 
+    /// Sends a `STORE` RPC.
     fn rpc_store(&mut self, dest: &NodeData, key: Key, value: String) -> Option<Response> {
         self.send_request(dest, RequestPayload::Store(key, value))
     }
 
+    /// Sends a `FIND_NODE` RPC.
     fn rpc_find_node(&mut self, dest: &NodeData, key: &Key) -> Option<Response> {
         self.send_request(dest, RequestPayload::FindNode(*key))
     }
 
+    /// Sends a `FIND_VALUE` RPC.
     fn rpc_find_value(&mut self, dest: &NodeData, key: &Key) -> Option<Response> {
         self.send_request(dest, RequestPayload::FindValue(*key))
     }
 
+    /// Spawns a thread that sends either a `FIND_NODE` or a `FIND_VALUE` RPC.
     fn spawn_find_rpc(mut self, dest: NodeData, key: Key, sender: Sender<Option<Response>>, find_node: bool) {
         thread::spawn(move || {
             let find_node_err = find_node && sender.send(self.rpc_find_node(&dest, &key)).is_err();
@@ -256,6 +276,13 @@ impl Node {
         });
     }
 
+    /// Iteratively looks up nodes to determine the closest nodes to `key`. The search begins by
+    /// selecting `CONCURRENCY_PARAM` nodes in the routing table and adding it to a shortlist. It
+    /// then sends out either `FIND_NODE` or `FIND_VALUE` RPCs to `CONCURRENCY_PARAM` nodes not yet
+    /// queried in the shortlist. The node will continue to fill its shortlist until it did not find
+    /// a closer node for a round of RPCs or if runs out of nodes to query. Finally, it will query
+    /// the remaining nodes in its shortlist until there are no remaining nodes or if it has found
+    /// `REPLICATION_PARAM` active nodes.
     fn lookup_nodes(&mut self, key: &Key, find_node: bool) -> ResponsePayload {
         let routing_table = self.routing_table.lock().unwrap();
         let closest_nodes = routing_table.get_closest_nodes(key, CONCURRENCY_PARAM);
@@ -378,6 +405,7 @@ impl Node {
         ResponsePayload::Nodes(ret)
     }
 
+    /// Inserts a key-value pair into the DHT.
     pub fn insert(&mut self, key: Key, value: &str) {
         if let ResponsePayload::Nodes(nodes) = self.lookup_nodes(&key, true) {
             for dest in nodes {
@@ -391,6 +419,8 @@ impl Node {
         }
     }
 
+    /// Gets the value associated with a particular key in the DHT. It will return `None` if the key
+    /// was not found.
     pub fn get(&mut self, key: &Key) -> Option<String> {
         if let ResponsePayload::Value(value) = self.lookup_nodes(key, false) {
             Some(value)
