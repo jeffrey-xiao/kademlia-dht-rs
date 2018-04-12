@@ -7,12 +7,13 @@ extern crate serde;
 extern crate serde_derive;
 extern crate time;
 
-pub mod protocol;
-pub mod node;
-pub mod key;
-pub mod storage;
-pub mod routing;
+mod protocol;
+mod node;
+mod key;
+mod storage;
+mod routing;
 
+pub use self::node::node_data::NodeData;
 pub use self::node::Node;
 pub use self::key::Key;
 

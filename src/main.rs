@@ -7,13 +7,10 @@ extern crate sha3;
 use simplelog::{CombinedLogger, TermLogger, Level, LevelFilter, Config};
 use std::io;
 use std::collections::HashMap;
+use std::convert::AsMut;
 use sha3::{Digest, Sha3_256};
 
-use kademlia_dht::Node;
-use kademlia_dht::key::Key;
-use kademlia_dht::protocol::Message;
-
-use std::convert::AsMut;
+use kademlia_dht::{Key, Node};
 
 fn clone_into_array<A: Sized + Default + AsMut<[T]>, T: Clone>(slice: &[T]) -> A {
     let mut a = Default::default();
@@ -51,7 +48,7 @@ fn main() {
             let n = Node::new(
                 &"localhost".to_string(),
                 &(8900 + i).to_string(),
-                Some((*node_map[&0].node_data).clone()),
+                Some(node_map[&0].node_data()),
             );
             node_map.insert(id, n.clone());
         }
@@ -59,8 +56,7 @@ fn main() {
     }
 
     for i in (1..50).filter(|num| num % 10 == 0) {
-        let node_data = node_map[&i].node_data.clone();
-        node_map[&i].protocol.send_message(&Message::Kill, &node_data);
+        node_map[&i].kill();
     }
 
     let input = io::stdin();
@@ -75,11 +71,10 @@ fn main() {
         match args[0] {
             "new" => {
                 let index: u32 = args[1].parse().unwrap();
-                let node_data = (*node_map[&index].node_data).clone();
                 let node = Node::new(
                     &"localhost".to_string(),
                     &(8900 + id).to_string(),
-                    Some(node_data),
+                    Some(node_map[&index].node_data()),
                 );
                 node_map.insert(id, node);
                 id += 1;

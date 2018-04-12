@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use key::Key;
 use std::fmt::{Debug, Formatter, Result};
 
+/// A struct that contains the address and id of a node.
 #[derive(PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 pub struct NodeData {
     pub addr: String,
@@ -15,6 +16,7 @@ impl Debug for NodeData {
     }
 }
 
+/// A struct that contains a `NodeData` and a distance.
 #[derive(Eq, Clone, Debug)]
 pub struct NodeDataDistancePair(pub NodeData, pub Key);
 

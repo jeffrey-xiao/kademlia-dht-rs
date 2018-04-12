@@ -419,13 +419,23 @@ impl Node {
         }
     }
 
-    /// Gets the value associated with a particular key in the DHT. It will return `None` if the key
-    /// was not found.
+    /// Gets the value associated with a particular key in the DHT. Returns `None` if the key was
+    /// not found.
     pub fn get(&mut self, key: &Key) -> Option<String> {
         if let ResponsePayload::Value(value) = self.lookup_nodes(key, false) {
             Some(value)
         } else {
             None
         }
+    }
+
+    /// Returns the `NodeData` associated with the node.
+    pub fn node_data(&self) -> NodeData {
+        return (*self.node_data).clone();
+    }
+
+    /// Kills the current node and all active threads.
+    pub fn kill(&self) {
+        self.protocol.send_message(&Message::Kill, &self.node_data);
     }
 }
