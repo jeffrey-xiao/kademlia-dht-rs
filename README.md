@@ -17,7 +17,11 @@ use sha3::{Digest, Sha3_256};
 use std::thread;
 use std::time::Duration;
 
-fn clone_into_array<A: Sized + Default + AsMut<[T]>, T: Clone>(slice: &[T]) -> A {
+fn clone_into_array<A, T>(slice: &[T]) -> A
+where
+    A: Sized + Default + AsMut<[T]>,
+    T: Clone,
+{
     let mut a = Default::default();
     <A as AsMut<[T]>>::as_mut(&mut a).clone_from_slice(slice);
     a
@@ -42,7 +46,6 @@ fn main() {
 
     assert_eq!(node.get(&key).unwrap(), value);
 }
-
 ```
 
 ## Usage

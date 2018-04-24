@@ -29,6 +29,7 @@ addons:
 script:
   - cargo build --verbose --all
   - cargo test --verbose --all
+  - cargo run --example example_kademlia_dht
 
 after_success:
   - |
@@ -42,7 +43,7 @@ after_success:
     make install DESTDIR=../../kcov-build &&
     cd ../.. &&
     rm -rf kcov-master &&
-    for file in target/debug/kademlia_dht-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+    for file in target/debug/kademlia_dht-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --exclude-path=./src/main.rs,./src/examples --verify "target/cov/$(basename $file)" "$file"; done &&
     bash <(curl -s https://codecov.io/bash) &&
     echo "Uploaded code coverage"
   - |
