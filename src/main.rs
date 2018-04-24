@@ -14,7 +14,7 @@ use kademlia_dht::{Key, Node};
 
 fn clone_into_array<A, T>(slice: &[T]) -> A
 where
-    A: Sized + Default + AsMut<[T]>.
+    A: Sized + Default + AsMut<[T]>,
     T: Clone,
 {
     let mut a = Default::default();
