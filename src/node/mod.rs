@@ -1,20 +1,20 @@
 pub mod node_data;
 
 use std::cmp;
-use std::net::UdpSocket;
 use std::collections::{BinaryHeap, HashMap, HashSet};
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::net::UdpSocket;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use {BUCKET_REFRESH_INTERVAL, CONCURRENCY_PARAM, KEY_LENGTH, REPLICATION_PARAM, REQUEST_TIMEOUT};
-use node::node_data::{NodeData, NodeDataDistancePair};
-use routing::RoutingTable;
-use protocol::{Message, Protocol, Request, RequestPayload, Response, ResponsePayload};
 use key::Key;
+use node::node_data::{NodeData, NodeDataDistancePair};
+use protocol::{Message, Protocol, Request, RequestPayload, Response, ResponsePayload};
+use routing::RoutingTable;
 use storage::Storage;
+use {BUCKET_REFRESH_INTERVAL, CONCURRENCY_PARAM, KEY_LENGTH, REPLICATION_PARAM, REQUEST_TIMEOUT};
 
 /// A node in the Kademlia DHT.
 #[derive(Clone)]
@@ -47,7 +47,7 @@ impl Node {
         }
 
         let mut ret = Node {
-            node_data: node_data,
+            node_data,
             routing_table: Arc::new(Mutex::new(routing_table)),
             storage: Arc::new(Mutex::new(Storage::new())),
             pending_requests: Arc::new(Mutex::new(HashMap::new())),
@@ -163,15 +163,23 @@ impl Node {
                 self.storage.lock().unwrap().insert(key, value);
                 ResponsePayload::Pong
             },
-            RequestPayload::FindNode(key) => ResponsePayload::Nodes(
-                self.routing_table.lock().unwrap().get_closest_nodes(&key, REPLICATION_PARAM),
-            ),
+            RequestPayload::FindNode(key) => {
+                ResponsePayload::Nodes(
+                    self.routing_table
+                        .lock()
+                        .unwrap()
+                        .get_closest_nodes(&key, REPLICATION_PARAM),
+                )
+            },
             RequestPayload::FindValue(key) => {
                 if let Some(value) = self.storage.lock().unwrap().get(&key) {
                     ResponsePayload::Value(value.clone())
                 } else {
                     ResponsePayload::Nodes(
-                        self.routing_table.lock().unwrap().get_closest_nodes(&key, REPLICATION_PARAM),
+                        self.routing_table
+                            .lock()
+                            .unwrap()
+                            .get_closest_nodes(&key, REPLICATION_PARAM),
                     )
                 }
             },
@@ -180,7 +188,7 @@ impl Node {
         self.protocol.send_message(
             &Message::Response(Response {
                 request: request.clone(),
-                receiver: receiver,
+                receiver,
                 payload,
             }),
             &request.sender,
@@ -223,7 +231,7 @@ impl Node {
             &Message::Request(Request {
                 id: token,
                 sender: (*self.node_data).clone(),
-                payload: payload,
+                payload,
             }),
             dest,
         );
@@ -266,7 +274,13 @@ impl Node {
     }
 
     /// Spawns a thread that sends either a `FIND_NODE` or a `FIND_VALUE` RPC.
-    fn spawn_find_rpc(mut self, dest: NodeData, key: Key, sender: Sender<Option<Response>>, find_node: bool) {
+    fn spawn_find_rpc(
+        mut self,
+        dest: NodeData,
+        key: Key,
+        sender: Sender<Option<Response>>,
+        find_node: bool,
+    ) {
         thread::spawn(move || {
             let find_node_err = find_node && sender.send(self.rpc_find_node(&dest, &key)).is_err();
             let find_value_err = !find_node && sender.send(self.rpc_find_value(&dest, &key)).is_err();
@@ -313,7 +327,12 @@ impl Node {
         // spawn initial find requests
         for _ in 0..CONCURRENCY_PARAM {
             if !queue.is_empty() {
-                self.clone().spawn_find_rpc(queue.pop().unwrap().0, key.clone(), tx.clone(), find_node);
+                self.clone().spawn_find_rpc(
+                    queue.pop().unwrap().0,
+                    key.clone(),
+                    tx.clone(),
+                    find_node,
+                );
                 concurrent_thread_count += 1;
             }
         }
@@ -321,7 +340,12 @@ impl Node {
         // loop until we could not find a closer node for a round or if no threads are running
         while concurrent_thread_count > 0 {
             while concurrent_thread_count < CONCURRENCY_PARAM && !queue.is_empty() {
-                self.clone().spawn_find_rpc(queue.pop().unwrap().0, key.clone(), tx.clone(), find_node);
+                self.clone().spawn_find_rpc(
+                    queue.pop().unwrap().0,
+                    key.clone(),
+                    tx.clone(),
+                    find_node,
+                );
                 concurrent_thread_count += 1;
             }
 
@@ -330,7 +354,11 @@ impl Node {
             concurrent_thread_count -= 1;
 
             match response_opt {
-                Some(Response { payload: ResponsePayload::Nodes(nodes), receiver, .. }) => {
+                Some(Response {
+                    payload: ResponsePayload::Nodes(nodes),
+                    receiver,
+                    ..
+                }) => {
                     queried_nodes.insert(receiver);
                     for node_data in nodes {
                         let curr_distance = node_data.id.xor(key);
@@ -370,7 +398,12 @@ impl Node {
         // loop until no threads are running or if we found REPLICATION_PARAM active nodes
         while queried_nodes.len() < REPLICATION_PARAM {
             while concurrent_thread_count < CONCURRENCY_PARAM && !queue.is_empty() {
-                self.clone().spawn_find_rpc(queue.pop().unwrap().0, key.clone(), tx.clone(), find_node);
+                self.clone().spawn_find_rpc(
+                    queue.pop().unwrap().0,
+                    key.clone(),
+                    tx.clone(),
+                    find_node,
+                );
                 concurrent_thread_count += 1;
             }
             if concurrent_thread_count == 0 {

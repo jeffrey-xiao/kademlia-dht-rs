@@ -24,7 +24,7 @@ impl Key {
     }
 
     /// Constructs a new, random `Key`.
-    pub(in super) fn rand() -> Self {
+    pub(super) fn rand() -> Self {
         let mut ret = Key([0; KEY_LENGTH]);
         for byte in &mut ret.0 {
             *byte = rand::random::<u8>();
@@ -33,7 +33,7 @@ impl Key {
     }
 
     /// Constructs a new, random `Key` from `[2^(KEY_LENGTH - index - 1), 2^(KEY_LENGTH - index))`.
-    pub(in super) fn rand_in_range(index: usize) -> Self {
+    pub(super) fn rand_in_range(index: usize) -> Self {
         let mut ret = Key::rand();
         let bytes = index / 8;
         let bit = index % 8;
@@ -46,7 +46,7 @@ impl Key {
     }
 
     /// Returns the XOR result between `self` and `key`.
-    pub(in super) fn xor(&self, key: &Key) -> Key {
+    pub(super) fn xor(&self, key: &Key) -> Key {
         let mut ret = [0; KEY_LENGTH];
         for (i, byte) in ret.iter_mut().enumerate() {
             *byte = self.0[i] ^ key.0[i];
@@ -56,13 +56,13 @@ impl Key {
 
     /// Returns the number of leading zeros in `self`. This is used to calculate the distance
     /// between keys.
-    pub(in super) fn leading_zeros(&self) -> usize {
+    pub(super) fn leading_zeros(&self) -> usize {
         let mut ret = 0;
         for i in 0..KEY_LENGTH {
             if self.0[i] == 0 {
                 ret += 8
             } else {
-                return ret + self.0[i].leading_zeros() as usize
+                return ret + self.0[i].leading_zeros() as usize;
             }
         }
         ret
@@ -93,6 +93,5 @@ mod tests {
         for i in 0..KEY_LENGTH * 8 {
             assert_eq!(Key::rand_in_range(i).leading_zeros(), i);
         }
-
     }
 }

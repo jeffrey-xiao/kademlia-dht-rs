@@ -1,14 +1,14 @@
 #[macro_use]
 extern crate log;
 extern crate kademlia_dht;
-extern crate simplelog;
 extern crate sha3;
+extern crate simplelog;
 
-use simplelog::{CombinedLogger, TermLogger, Level, LevelFilter, Config};
-use std::io;
+use sha3::{Digest, Sha3_256};
+use simplelog::{CombinedLogger, Config, Level, LevelFilter, TermLogger};
 use std::collections::HashMap;
 use std::convert::AsMut;
-use sha3::{Digest, Sha3_256};
+use std::io;
 
 use kademlia_dht::{Key, Node};
 
@@ -36,11 +36,9 @@ fn main() {
         location: None,
         time_format: None,
     };
-    CombinedLogger::init(
-        vec![
-            TermLogger::new(LevelFilter::Info, logger_config).unwrap(),
-        ],
-    ).unwrap();
+    CombinedLogger::init(vec![
+        TermLogger::new(LevelFilter::Info, logger_config).unwrap(),
+    ]).unwrap();
 
     let mut node_map = HashMap::new();
     let mut id = 0;

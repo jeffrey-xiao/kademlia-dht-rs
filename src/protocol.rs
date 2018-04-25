@@ -1,13 +1,13 @@
 use bincode;
 use std::net::UdpSocket;
 use std::str;
-use std::sync::Arc;
 use std::sync::mpsc::Sender;
+use std::sync::Arc;
 use std::thread;
 
-use MESSAGE_LENGTH;
-use node::node_data::NodeData;
 use key::Key;
+use node::node_data::NodeData;
+use MESSAGE_LENGTH;
 
 /// An enum representing a request RPC.
 ///

@@ -3,9 +3,9 @@ use std::sync::Arc;
 use std::{cmp, mem};
 use time::{Duration, SteadyTime};
 
-use {BUCKET_REFRESH_INTERVAL, REPLICATION_PARAM, ROUTING_TABLE_SIZE};
-use node::node_data::NodeData;
 use key::Key;
+use node::node_data::NodeData;
+use {BUCKET_REFRESH_INTERVAL, REPLICATION_PARAM, ROUTING_TABLE_SIZE};
 
 /// A k-bucket in a node's routing table that has a maximum capacity of `REPLICATION_PARAM`.
 ///
@@ -109,10 +109,7 @@ impl RoutingTable {
     pub fn new(node_data: Arc<NodeData>) -> Self {
         let mut buckets = Vec::new();
         buckets.push(RoutingBucket::new());
-        RoutingTable {
-            buckets: buckets,
-            node_data: node_data,
-        }
+        RoutingTable { buckets, node_data }
     }
 
     /// Upserts a node into the routing table. It will continue to split the routing table until the
@@ -148,7 +145,10 @@ impl RoutingTable {
 
     /// Returns the closest `count` nodes to `key`.
     pub fn get_closest_nodes(&self, key: &Key, count: usize) -> Vec<NodeData> {
-        let index = cmp::min(self.node_data.id.xor(key).leading_zeros(), self.buckets.len() - 1);
+        let index = cmp::min(
+            self.node_data.id.xor(key).leading_zeros(),
+            self.buckets.len() - 1,
+        );
         let mut ret = Vec::new();
 
         // the closest keys are guaranteed to be in bucket which the key would reside
@@ -180,18 +180,24 @@ impl RoutingTable {
 
     /// Removes the least recently seen node from a particular routing bucket in the routing table.
     pub fn remove_lrs(&mut self, key: &Key) -> Option<NodeData> {
-        let index = cmp::min(self.node_data.id.xor(key).leading_zeros(), self.buckets.len() - 1);
+        let index = cmp::min(
+            self.node_data.id.xor(key).leading_zeros(),
+            self.buckets.len() - 1,
+        );
         self.buckets[index].remove_lrs()
     }
 
     /// Removes `node_data` from the routing table.
     pub fn remove_node(&mut self, node_data: &NodeData) {
-        let index = cmp::min(self.node_data.id.xor(&node_data.id).leading_zeros(), self.buckets.len() - 1);
+        let index = cmp::min(
+            self.node_data.id.xor(&node_data.id).leading_zeros(),
+            self.buckets.len() - 1,
+        );
         self.buckets[index].remove_node(node_data);
     }
 
     /// Returns a list of all the stale routing buckets in the routing table.
-    pub fn get_stale_indexes(&self)-> Vec<usize> {
+    pub fn get_stale_indexes(&self) -> Vec<usize> {
         let mut ret = Vec::new();
         for (i, bucket) in self.buckets.iter().enumerate() {
             if bucket.is_stale() {

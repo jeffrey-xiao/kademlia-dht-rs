@@ -7,15 +7,15 @@ extern crate serde;
 extern crate serde_derive;
 extern crate time;
 
-mod protocol;
-mod node;
 mod key;
-mod storage;
+mod node;
+mod protocol;
 mod routing;
+mod storage;
 
+pub use self::key::Key;
 pub use self::node::node_data::NodeData;
 pub use self::node::Node;
-pub use self::key::Key;
 
 /// The number of bytes in a key.
 const KEY_LENGTH: usize = 32;
