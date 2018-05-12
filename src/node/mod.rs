@@ -464,7 +464,7 @@ impl Node {
 
     /// Returns the `NodeData` associated with the node.
     pub fn node_data(&self) -> NodeData {
-        return (*self.node_data).clone();
+        (*self.node_data).clone()
     }
 
     /// Kills the current node and all active threads.
