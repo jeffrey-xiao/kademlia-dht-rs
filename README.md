@@ -67,5 +67,5 @@ extern crate kademlia_dht;
  - Each key is 256 bits as opposed to 160 bits so that consumers can use SHA-3 instead of SHA-1.
 
 ## References
- - Kademlia: A Peer-to-Peer Information System Based on the XOR Metric
- > Petar Maymounkov and David Mazières. 2002. Kademlia: A Peer-to-Peer Information System Based on the XOR Metric. In Revised Papers from the First International Workshop on Peer-to-Peer Systems (IPTPS '01), Peter Druschel, M. Frans Kaashoek, and Antony I. T. Rowstron (Eds.). Springer-Verlag, London, UK, UK, 53-65.
+ - [Kademlia: A Peer-to-Peer Information System Based on the XOR Metric](https://dl.acm.org/citation.cfm?id=687801)
+ > Maymounkov, Petar, and David Mazières. 2002. “Kademlia: A Peer-to-Peer Information System Based on the Xor Metric.” In *Revised Papers from the First International Workshop on Peer-to-Peer Systems*, 53–65. IPTPS ’01. London, UK, UK: Springer-Verlag. <http://dl.acm.org/citation.cfm?id=646334.687801>.
