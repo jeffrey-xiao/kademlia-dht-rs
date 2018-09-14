@@ -27,10 +27,11 @@ addons:
       - libiberty-dev
 
 before_script:
-  - rustup component add rustfmt-preview
+  - rustup install nightly
+  - rustup component add rustfmt-preview --toolchain nightly
 
 script:
-  - cargo fmt --verbose --all -- --check
+  - cargo +nightly fmt --verbose --all -- --check
   - cargo build --verbose --all
   - cargo test --verbose --all
   - cargo run --example example_kademlia_dht
