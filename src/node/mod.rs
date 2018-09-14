@@ -31,8 +31,8 @@ impl Node {
     /// Constructs a new `Node` on a specific ip and port, and bootstraps the node with an existing
     /// node if `bootstrap` is not `None`.
     pub fn new(ip: &str, port: &str, bootstrap: Option<NodeData>) -> Self {
-        let socket = UdpSocket::bind(format!("{}:{}", ip, port))
-            .expect("Error: Could not bind to address!");
+        let addr = format!("{}:{}", ip, port);
+        let socket = UdpSocket::bind(addr).expect("Error: Could not bind to address!");
         let node_data = Arc::new(NodeData {
             addr: socket.local_addr().unwrap().to_string(),
             id: Key::rand(),
@@ -151,9 +151,7 @@ impl Node {
     fn handle_request(&mut self, request: &Request) {
         info!(
             "{} - Receiving request from {} {:#?}",
-            self.node_data.addr,
-            request.sender.addr,
-            request.payload,
+            self.node_data.addr, request.sender.addr, request.payload,
         );
         self.clone().update_routing_table(request.sender.clone());
         let receiver = (*self.node_data).clone();
@@ -204,19 +202,23 @@ impl Node {
         if let Some(sender) = pending_requests.get(&request.id) {
             info!(
                 "{} - Receiving response from {} {:#?}",
-                self.node_data.addr,
-                response.receiver.addr,
-                response.payload,
+                self.node_data.addr, response.receiver.addr, response.payload,
             );
             sender.send(response.clone()).unwrap();
         } else {
-            warn!("{} - Original request not found; irrelevant response or expired request.", self.node_data.addr);
+            warn!(
+                "{} - Original request not found; irrelevant response or expired request.",
+                self.node_data.addr
+            );
         }
     }
 
     /// Sends a request RPC.
     fn send_request(&mut self, dest: &NodeData, payload: RequestPayload) -> Option<Response> {
-        info!("{} - Sending request to {} {:#?}", self.node_data.addr, dest.addr, payload);
+        info!(
+            "{} - Sending request to {} {:#?}",
+            self.node_data.addr, dest.addr, payload
+        );
         let (response_tx, response_rx) = channel();
         let mut pending_requests = self.pending_requests.lock().unwrap();
         let mut token = Key::rand();
@@ -243,7 +245,10 @@ impl Node {
                 Some(response)
             },
             Err(_) => {
-                warn!("{} - Request to {} timed out after waiting for {} milliseconds", self.node_data.addr, dest.addr, REQUEST_TIMEOUT);
+                warn!(
+                    "{} - Request to {} timed out after waiting for {} milliseconds",
+                    self.node_data.addr, dest.addr, REQUEST_TIMEOUT
+                );
                 let mut pending_requests = self.pending_requests.lock().unwrap();
                 pending_requests.remove(&token);
                 let mut routing_table = self.routing_table.lock().unwrap();
@@ -282,9 +287,15 @@ impl Node {
         find_node: bool,
     ) {
         thread::spawn(move || {
-            let find_node_err = find_node && sender.send(self.rpc_find_node(&dest, &key)).is_err();
-            let find_value_err = !find_node && sender.send(self.rpc_find_value(&dest, &key)).is_err();
-            if find_node_err || find_value_err {
+            let find_err = {
+                if find_node {
+                    sender.send(self.rpc_find_node(&dest, &key)).is_err()
+                } else {
+                    sender.send(self.rpc_find_value(&dest, &key)).is_err()
+                }
+            };
+
+            if find_err {
                 warn!("Receiver closed channel before rpc returned.");
             }
         });
@@ -370,29 +381,28 @@ impl Node {
                             }
 
                             found_nodes.insert(node_data.clone());
-                            let next = NodeDataDistancePair(node_data.clone(), node_data.id.xor(key));
+                            let dist = node_data.id.xor(key);
+                            let next = NodeDataDistancePair(node_data.clone(), dist);
                             queue.push(next.clone());
                         }
                     }
                 },
-                Some(Response { payload: ResponsePayload::Value(value), .. }) => {
-                    return ResponsePayload::Value(value);
-                },
-                _ => {
-                    is_terminated = false;
-                },
+                Some(Response {
+                    payload: ResponsePayload::Value(value),
+                    ..
+                }) => return ResponsePayload::Value(value),
+                _ => is_terminated = false,
             }
 
             if is_terminated {
                 break;
             }
-            debug!("CURR CLOSEST DISTANCE IS {:?}", closest_distance);
+            debug!("CURRENT CLOSEST DISTANCE IS {:?}", closest_distance);
         }
 
         debug!(
             "{} TERMINATED LOOKUP BECAUSE NOT CLOSER OR NO THREADS WITH DISTANCE {:?}",
-            self.node_data.addr,
-            closest_distance,
+            self.node_data.addr, closest_distance,
         );
 
         // loop until no threads are running or if we found REPLICATION_PARAM active nodes
@@ -414,19 +424,25 @@ impl Node {
             concurrent_thread_count -= 1;
 
             match response_opt {
-                Some(Response { payload: ResponsePayload::Nodes(nodes), receiver, .. }) => {
+                Some(Response {
+                    payload: ResponsePayload::Nodes(nodes),
+                    receiver,
+                    ..
+                }) => {
                     queried_nodes.insert(receiver);
                     for node_data in nodes {
                         if !found_nodes.contains(&node_data) {
                             found_nodes.insert(node_data.clone());
-                            let next = NodeDataDistancePair(node_data.clone(), node_data.id.xor(key));
+                            let dist = node_data.id.xor(key);
+                            let next = NodeDataDistancePair(node_data.clone(), dist);
                             queue.push(next.clone());
                         }
                     }
                 },
-                Some(Response { payload: ResponsePayload::Value(value), .. }) => {
-                    return ResponsePayload::Value(value);
-                },
+                Some(Response {
+                    payload: ResponsePayload::Value(value),
+                    ..
+                }) => return ResponsePayload::Value(value),
                 _ => {},
             }
         }

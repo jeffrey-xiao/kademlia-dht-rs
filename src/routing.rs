@@ -48,7 +48,8 @@ impl RoutingBucket {
 
     /// Splits `self` by a particular index and returns the closer bucket.
     fn split(&mut self, key: &Key, index: usize) -> RoutingBucket {
-        let (old_bucket, new_bucket) = self.nodes
+        let (old_bucket, new_bucket) = self
+            .nodes
             .drain(..)
             .partition(|node| node.id.xor(key).leading_zeros() == index);
         mem::replace(&mut self.nodes, old_bucket);
@@ -85,7 +86,8 @@ impl RoutingBucket {
     ///
     /// A bucket is stale if it has not been updated in `BUCKET_REFRESH_INTERVAL` seconds.
     pub fn is_stale(&self) -> bool {
-        SteadyTime::now() - self.last_update_time > Duration::seconds(BUCKET_REFRESH_INTERVAL as i64)
+        let time_diff = SteadyTime::now() - self.last_update_time;
+        time_diff > Duration::seconds(BUCKET_REFRESH_INTERVAL as i64)
     }
 
     /// Returns the number of nodes in the routing bucket.
@@ -117,28 +119,31 @@ impl RoutingTable {
     pub fn update_node(&mut self, node_data: NodeData) -> bool {
         let distance = self.node_data.id.xor(&node_data.id).leading_zeros();
         let mut target_bucket = cmp::min(distance, self.buckets.len() - 1);
+
         if self.buckets[target_bucket].contains(&node_data) {
             self.buckets[target_bucket].update_node(node_data);
             return true;
         }
+
         loop {
-            // bucket is full
-            if self.buckets[target_bucket].size() == REPLICATION_PARAM {
-                // split bucket
-                if target_bucket == self.buckets.len() - 1 && self.buckets.len() < ROUTING_TABLE_SIZE {
-                    let new_bucket = self.buckets[target_bucket].split(&self.node_data.id, target_bucket);
-                    self.buckets.push(new_bucket);
-                }
-                // bucket cannot be split
-                else {
-                    return false;
-                }
-            }
-            // add into bucket
-            else {
+            // bucket is not full
+            if self.buckets[target_bucket].size() < REPLICATION_PARAM {
                 self.buckets[target_bucket].update_node(node_data);
                 return true;
             }
+
+            let is_last_bucket = target_bucket == self.buckets.len() - 1;
+            let is_full = self.buckets.len() == ROUTING_TABLE_SIZE;
+
+            // bucket cannot be split
+            if !is_last_bucket || is_full {
+                return false;
+            }
+
+            // split bucket
+            let new_bucket = self.buckets[target_bucket].split(&self.node_data.id, target_bucket);
+            self.buckets.push(new_bucket);
+
             target_bucket = cmp::min(distance, self.buckets.len() - 1);
         }
     }
