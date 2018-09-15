@@ -32,7 +32,7 @@ impl Node {
     /// node if `bootstrap` is not `None`.
     pub fn new(ip: &str, port: &str, bootstrap: Option<NodeData>) -> Self {
         let addr = format!("{}:{}", ip, port);
-        let socket = UdpSocket::bind(addr).expect("Error: Could not bind to address!");
+        let socket = UdpSocket::bind(addr).expect("Error: could not bind to address.");
         let node_data = Arc::new(NodeData {
             addr: socket.local_addr().unwrap().to_string(),
             id: Key::rand(),
