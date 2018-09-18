@@ -3,6 +3,7 @@
 [![kademlia-dht](http://meritbadge.herokuapp.com/kademlia-dht)](https://crates.io/crates/kademlia-dht)
 [![Documentation](https://docs.rs/kademlia-dht/badge.svg)](https://docs.rs/kademlia-dht)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://travis-ci.org/jeffrey-xiao/kademlia-dht-rs.svg?branch=master)](https://travis-ci.org/jeffrey-xiao/kademlia-dht-rs)
 [![codecov](https://codecov.io/gh/jeffrey-xiao/kademlia-dht-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/jeffrey-xiao/kademlia-dht-rs)
 
@@ -77,7 +78,7 @@ extern crate kademlia_dht;
 
 ## License
 
-`kademlia-dht-rs` is dual-licensed under the terms of either the MIT license or the Apache License
+`kademlia-dht-rs` is dual-licensed under the terms of either the MIT License or the Apache License
 (Version 2.0).
 
 See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for more details.
