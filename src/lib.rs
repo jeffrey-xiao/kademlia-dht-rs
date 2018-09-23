@@ -3,6 +3,7 @@
 //! [![kademlia-dht](http://meritbadge.herokuapp.com/kademlia-dht)](https://crates.io/crates/kademlia-dht)
 //! [![Documentation](https://docs.rs/kademlia-dht/badge.svg)](https://docs.rs/kademlia-dht)
 //! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+//! [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 //! [![Build Status](https://travis-ci.org/jeffrey-xiao/kademlia-dht-rs.svg?branch=master)](https://travis-ci.org/jeffrey-xiao/kademlia-dht-rs)
 //! [![codecov](https://codecov.io/gh/jeffrey-xiao/kademlia-dht-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/jeffrey-xiao/kademlia-dht-rs)
 //!
@@ -72,8 +73,15 @@
 //!
 //! ## References
 //!
-//!  - Kademlia: A Peer-to-Peer Information System Based on the XOR Metric
-//!  > Petar Maymounkov and David Mazières. 2002. Kademlia: A Peer-to-Peer Information System Based on the XOR Metric. In Revised Papers from the First International Workshop on Peer-to-Peer Systems (IPTPS '01), Peter Druschel, M. Frans Kaashoek, and Antony I. T. Rowstron (Eds.). Springer-Verlag, London, UK, UK, 53-65.
+//!  - [Kademlia: A Peer-to-Peer Information System Based on the XOR Metric](https://dl.acm.org/citation.cfm?id=687801)
+//!  > Maymounkov, Petar, and David Mazières. 2002. “Kademlia: A Peer-to-Peer Information System Based on the Xor Metric.” In *Revised Papers from the First International Workshop on Peer-to-Peer Systems*, 53–65. IPTPS ’01. London, UK, UK: Springer-Verlag. <http://dl.acm.org/citation.cfm?id=646334.687801>.
+//!
+//! ## License
+//!
+//! `kademlia-dht-rs` is dual-licensed under the terms of either the MIT License or the Apache License
+//! (Version 2.0).
+//!
+//! See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for more details.
 
 #![warn(missing_docs)]
 
