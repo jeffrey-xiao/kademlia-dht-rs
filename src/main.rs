@@ -38,7 +38,8 @@ fn main() {
     };
     CombinedLogger::init(vec![
         TermLogger::new(LevelFilter::Info, logger_config).unwrap(),
-    ]).unwrap();
+    ])
+    .unwrap();
 
     let mut node_map = HashMap::new();
     let mut id = 0;
