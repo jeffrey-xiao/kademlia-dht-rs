@@ -1,6 +1,5 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::mem;
-use std::vec::Vec;
 use time::{Duration, SteadyTime};
 
 use key::Key;
@@ -11,8 +10,8 @@ use KEY_EXPIRATION;
 /// `Storage` will remove a item if it is older than `KEY_EXPIRATION` seconds.
 #[derive(Default)]
 pub struct Storage {
-    items: HashMap<Key, String>,
-    publish_times: BTreeMap<SteadyTime, Vec<Key>>,
+    items: HashMap<Key, (String, SteadyTime)>,
+    publish_times: BTreeMap<SteadyTime, HashSet<Key>>,
 }
 
 impl Storage {
@@ -44,17 +43,22 @@ impl Storage {
         self.remove_expired();
         let curr_time = SteadyTime::now();
 
-        self.items.insert(key, value);
+        if let Some(old_entry) = self.items.insert(key, (value, curr_time)) {
+            if let Some(keys) = self.publish_times.get_mut(&old_entry.1) {
+                keys.remove(&key);
+            }
+        }
+
         self.publish_times
             .entry(curr_time)
-            .or_insert_with(Vec::new)
-            .push(key);
+            .or_insert_with(HashSet::new)
+            .insert(key);
     }
 
     /// Returns the value associated with `key`. Returns `None` if such a key does not exist in
     /// `Storage`.
     pub fn get(&mut self, key: &Key) -> Option<&String> {
         self.remove_expired();
-        self.items.get(key)
+        self.items.get(key).map(|entry| &entry.0)
     }
 }
