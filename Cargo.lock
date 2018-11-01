@@ -83,7 +83,7 @@ dependencies = [
 
 [[package]]
 name = "kademlia-dht"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "bincode 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
