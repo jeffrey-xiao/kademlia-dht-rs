@@ -37,7 +37,7 @@ fn main() {
         time_format: None,
     };
     CombinedLogger::init(vec![
-        TermLogger::new(LevelFilter::Info, logger_config).unwrap(),
+        TermLogger::new(LevelFilter::Info, logger_config).unwrap()
     ])
     .unwrap();
 
