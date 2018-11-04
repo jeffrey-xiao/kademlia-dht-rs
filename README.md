@@ -71,6 +71,10 @@ extern crate kademlia_dht;
  - The recursive lookup of nodes uses strict parallelism to tightly bound the number of active RPCs rather than the loose parallelism implied by the paper.
  - Each key is 256 bits as opposed to 160 bits so that consumers can use SHA-3 instead of SHA-1.
 
+## Changelog
+
+See [CHANGELOG](CHANGELOG.md) for more details.
+
 ## References
 
  - [Kademlia: A Peer-to-Peer Information System Based on the XOR Metric](https://dl.acm.org/citation.cfm?id=687801)
