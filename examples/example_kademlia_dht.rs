@@ -1,6 +1,3 @@
-extern crate kademlia_dht;
-extern crate sha3;
-
 use kademlia_dht::{Key, Node};
 use sha3::{Digest, Sha3_256};
 use std::thread;

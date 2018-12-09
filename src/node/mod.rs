@@ -1,5 +1,18 @@
 pub mod node_data;
 
+use crate::key::Key;
+use crate::node::node_data::{NodeData, NodeDataDistancePair};
+use crate::protocol::{Message, Protocol, Request, RequestPayload, Response, ResponsePayload};
+use crate::routing::RoutingTable;
+use crate::storage::Storage;
+use crate::{
+    BUCKET_REFRESH_INTERVAL,
+    CONCURRENCY_PARAM,
+    KEY_LENGTH,
+    REPLICATION_PARAM,
+    REQUEST_TIMEOUT,
+};
+use log::{debug, info, log, warn};
 use std::cmp;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::net::UdpSocket;
@@ -8,13 +21,6 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-
-use key::Key;
-use node::node_data::{NodeData, NodeDataDistancePair};
-use protocol::{Message, Protocol, Request, RequestPayload, Response, ResponsePayload};
-use routing::RoutingTable;
-use storage::Storage;
-use {BUCKET_REFRESH_INTERVAL, CONCURRENCY_PARAM, KEY_LENGTH, REPLICATION_PARAM, REQUEST_TIMEOUT};
 
 /// A node in the Kademlia DHT.
 #[derive(Clone)]

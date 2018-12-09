@@ -1,9 +1,4 @@
-#[macro_use]
-extern crate log;
-extern crate kademlia_dht;
-extern crate sha3;
-extern crate simplelog;
-
+use log::{info, log};
 use sha3::{Digest, Sha3_256};
 use simplelog::{CombinedLogger, Config, Level, LevelFilter, TermLogger};
 use std::collections::HashMap;

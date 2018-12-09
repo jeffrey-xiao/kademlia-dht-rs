@@ -58,7 +58,7 @@
 //! [dependencies]
 //! kademlia-dht = "*"
 //! ```
-//! and this to your crate root:
+//! and this to your crate root if you are using Rust 2015:
 //! ```rust
 //! extern crate kademlia_dht;
 //! ```
@@ -70,6 +70,10 @@
 //!  - Caching and key republishing described in Section 2.5 is not implemented to simplify the number of moving parts and active threads. It is up to the user of the library to ensure that keys are being republished.
 //!  - The recursive lookup of nodes uses strict parallelism to tightly bound the number of active RPCs rather than the loose parallelism implied by the paper.
 //!  - Each key is 256 bits as opposed to 160 bits so that consumers can use SHA-3 instead of SHA-1.
+//!
+//! ## Changelog
+//!
+//! See [CHANGELOG](CHANGELOG.md) for more details.
 //!
 //! ## References
 //!
@@ -84,15 +88,6 @@
 //! See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for more details.
 
 #![warn(missing_docs)]
-
-extern crate bincode;
-#[macro_use]
-extern crate log;
-extern crate rand;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate time;
 
 mod key;
 mod node;

@@ -1,6 +1,6 @@
+use crate::key::Key;
+use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ordering;
-
-use key::Key;
 use std::fmt::{Debug, Formatter, Result};
 
 /// A struct that contains the address and id of a node.
@@ -11,7 +11,7 @@ pub struct NodeData {
 }
 
 impl Debug for NodeData {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{} - {:?}", self.addr, self.id)
     }
 }

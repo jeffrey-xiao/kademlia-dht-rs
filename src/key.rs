@@ -1,7 +1,7 @@
+use crate::KEY_LENGTH;
 use rand;
+use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Debug, Formatter, Result};
-
-use KEY_LENGTH;
 
 /// A key that represents nodes and data.
 ///
@@ -11,7 +11,7 @@ use KEY_LENGTH;
 pub struct Key(pub [u8; KEY_LENGTH]);
 
 impl Debug for Key {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let hex_vec: Vec<String> = self.0.iter().map(|b| format!("{:02X}", b)).collect();
         write!(f, "{}", hex_vec.join(""))
     }
@@ -71,11 +71,9 @@ impl Key {
 
 #[cfg(test)]
 mod tests {
-    extern crate num_bigint;
-    use self::num_bigint::BigUint;
-
     use super::Key;
-    use KEY_LENGTH;
+    use crate::KEY_LENGTH;
+    use num_bigint::BigUint;
 
     #[test]
     fn test_rand_in_range() {
