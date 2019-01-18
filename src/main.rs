@@ -65,7 +65,7 @@ fn main() {
         if input.read_line(&mut buffer).is_err() {
             break;
         }
-        let args: Vec<&str> = buffer.trim_right().split(' ').collect();
+        let args: Vec<&str> = buffer.trim_end().split(' ').collect();
         match args[0] {
             "new" => {
                 let index: u32 = args[1].parse().unwrap();
