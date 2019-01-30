@@ -6,7 +6,9 @@ use std::fmt::{Debug, Formatter, Result};
 /// A struct that contains the address and id of a node.
 #[derive(PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 pub struct NodeData {
+    /// The address of the node in the form of `ip:port`.
     pub addr: String,
+    /// The id of the node.
     pub id: Key,
 }
 

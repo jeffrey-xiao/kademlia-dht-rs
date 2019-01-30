@@ -106,6 +106,7 @@ mod routing;
 mod storage;
 
 pub use self::key::Key;
+pub use self::node::node_data::NodeData;
 pub use self::node::Node;
 
 /// The number of bytes in a key.
