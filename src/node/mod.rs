@@ -6,11 +6,7 @@ use crate::protocol::{Message, Protocol, Request, RequestPayload, Response, Resp
 use crate::routing::RoutingTable;
 use crate::storage::Storage;
 use crate::{
-    BUCKET_REFRESH_INTERVAL,
-    CONCURRENCY_PARAM,
-    KEY_LENGTH,
-    REPLICATION_PARAM,
-    REQUEST_TIMEOUT,
+    BUCKET_REFRESH_INTERVAL, CONCURRENCY_PARAM, KEY_LENGTH, REPLICATION_PARAM, REQUEST_TIMEOUT,
 };
 use log::{debug, info, log, warn};
 use std::cmp;
@@ -79,7 +75,7 @@ impl Node {
                         node.is_active.store(false, Ordering::Release);
                         info!("{} - Killed message handler", node.node_data.addr);
                         break;
-                    },
+                    }
                 }
             }
         });
@@ -166,15 +162,13 @@ impl Node {
             RequestPayload::Store(key, value) => {
                 self.storage.lock().unwrap().insert(key, value);
                 ResponsePayload::Pong
-            },
-            RequestPayload::FindNode(key) => {
-                ResponsePayload::Nodes(
-                    self.routing_table
-                        .lock()
-                        .unwrap()
-                        .get_closest_nodes(&key, REPLICATION_PARAM),
-                )
-            },
+            }
+            RequestPayload::FindNode(key) => ResponsePayload::Nodes(
+                self.routing_table
+                    .lock()
+                    .unwrap()
+                    .get_closest_nodes(&key, REPLICATION_PARAM),
+            ),
             RequestPayload::FindValue(key) => {
                 if let Some(value) = self.storage.lock().unwrap().get(&key) {
                     ResponsePayload::Value(value.clone())
@@ -186,7 +180,7 @@ impl Node {
                             .get_closest_nodes(&key, REPLICATION_PARAM),
                     )
                 }
-            },
+            }
         };
 
         self.protocol.send_message(
@@ -249,7 +243,7 @@ impl Node {
                 let mut pending_requests = self.pending_requests.lock().unwrap();
                 pending_requests.remove(&token);
                 Some(response)
-            },
+            }
             Err(_) => {
                 warn!(
                     "{} - Request to {} timed out after waiting for {} milliseconds",
@@ -260,7 +254,7 @@ impl Node {
                 let mut routing_table = self.routing_table.lock().unwrap();
                 routing_table.remove_node(dest);
                 None
-            },
+            }
         }
     }
 
@@ -392,7 +386,7 @@ impl Node {
                             queue.push(next.clone());
                         }
                     }
-                },
+                }
                 Some(Response {
                     payload: ResponsePayload::Value(value),
                     ..
@@ -444,12 +438,12 @@ impl Node {
                             queue.push(next.clone());
                         }
                     }
-                },
+                }
                 Some(Response {
                     payload: ResponsePayload::Value(value),
                     ..
                 }) => return ResponsePayload::Value(value),
-                _ => {},
+                _ => {}
             }
         }
 

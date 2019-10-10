@@ -76,19 +76,19 @@ fn main() {
                 );
                 node_map.insert(id, node);
                 id += 1;
-            },
+            }
             "insert" => {
                 let index: u32 = args[1].parse().unwrap();
                 let key = get_key(args[2]);
                 let value = args[3];
                 node_map.get_mut(&index).unwrap().insert(key, value);
-            },
+            }
             "get" => {
                 let index: u32 = args[1].parse().unwrap();
                 let key = get_key(args[2]);
                 info!("{:?}", node_map.get_mut(&index).unwrap().get(&key));
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
 }
